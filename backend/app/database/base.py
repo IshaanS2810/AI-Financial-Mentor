@@ -1,3 +1,7 @@
-"""Placeholder for the SQLAlchemy model registry."""
+"""
+Import all models here so SQLAlchemy can discover them.
+"""
 
-# All SQLAlchemy models will be imported here later.
+from app.models.user import User
+
+__all__ = ["User"]
