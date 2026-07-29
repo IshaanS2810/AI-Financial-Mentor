@@ -1,7 +1,13 @@
-"""Placeholder for application configuration settings."""
+import os
+from dotenv import load_dotenv
 
-# Environment variables will be defined and loaded here later.
-# API keys will be configured here later.
-# The database URL will be configured here later.
-# The JWT secret will be configured here later.
-# Application settings will be defined here later.
+load_dotenv()
+
+APP_NAME = os.getenv("APP_NAME")
+APP_VERSION = os.getenv("APP_VERSION")
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))

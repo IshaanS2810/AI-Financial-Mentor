@@ -1,3 +1,26 @@
-"""Placeholder for user request and response schemas."""
+from datetime import datetime
 
-# User Pydantic schemas will be implemented here later.
+from pydantic import BaseModel, EmailStr, ConfigDict
+
+
+class UserRegister(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+class Token(BaseModel):
+    access_token: str
+    token_type: str

@@ -11,8 +11,7 @@ This module is responsible for:
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# SQLite database URL
-DATABASE_URL = "sqlite:///finance.db"
+from app.config import DATABASE_URL
 
 # Create the database engine
 engine = create_engine(
@@ -29,3 +28,9 @@ SessionLocal = sessionmaker(
 
 # Base class for all models
 Base = declarative_base()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
