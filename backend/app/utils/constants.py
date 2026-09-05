@@ -1,5 +1,22 @@
-"""Placeholder for shared application constants."""
+"""Shared application constants for AI Financial Mentor."""
 
-# Expense categories will be defined here later.
-# API constants will be defined here later.
-# Application constants will be defined here later.
+EXPENSE_CATEGORIES = [
+    "Food",
+    "Transport",
+    "Education",
+    "Entertainment",
+    "Shopping",
+    "Bills",
+    "Healthcare",
+    "Other",
+]
+
+INCOME_CATEGORIES = [
+    "Salary",
+    "Freelance",
+    "Business",
+    "Investments",
+    "Rental",
+    "Gift",
+    "Other",
+]
