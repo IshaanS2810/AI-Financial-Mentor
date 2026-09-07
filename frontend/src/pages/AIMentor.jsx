@@ -9,23 +9,128 @@ import {
   AlertTriangle,
   History,
   Loader2,
-  HelpCircle,
 } from 'lucide-react';
 
 const SUGGESTED_PROMPTS = [
-  'What is compound interest and why does starting early matter?',
+  'What are mutual funds and how do they work?',
   'What is a Systematic Investment Plan (SIP)?',
   'How should I build an emergency fund?',
-  'Explain the 50/30/20 budgeting framework.',
-  'Analyze my current recorded spending and offer suggestions.',
+  'Explain compound interest and the rule of 72.',
+  'Analyze my current spending and budget.',
 ];
+
+const renderInlineFormatting = (text, isUser = false) => {
+  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong
+          key={i}
+          className={`font-semibold ${isUser ? 'text-white' : 'text-slate-900'}`}
+        >
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return (
+        <em
+          key={i}
+          className={`italic ${isUser ? 'text-indigo-100' : 'text-slate-600'}`}
+        >
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code
+          key={i}
+          className="px-1.5 py-0.5 rounded bg-slate-200 text-xs font-mono text-indigo-700"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return part;
+  });
+};
+
+const FormattedMessage = ({ content, isUser }) => {
+  if (!content) return null;
+  if (isUser) {
+    return <div className="leading-relaxed whitespace-pre-wrap">{content}</div>;
+  }
+
+  const lines = content.split('\n');
+
+  return (
+    <div className="space-y-1.5 text-sm leading-relaxed text-slate-800">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={idx} className="h-1" />;
+        }
+        if (trimmed.startsWith('### ')) {
+          return (
+            <h3 key={idx} className="text-base font-bold text-slate-900 mt-2 mb-1">
+              {trimmed.replace('### ', '')}
+            </h3>
+          );
+        }
+        if (trimmed.startsWith('#### ')) {
+          return (
+            <h4
+              key={idx}
+              className="text-xs font-bold uppercase tracking-wider text-indigo-700 mt-2 mb-0.5"
+            >
+              {trimmed.replace('#### ', '')}
+            </h4>
+          );
+        }
+        if (trimmed.startsWith('> ')) {
+          return (
+            <blockquote
+              key={idx}
+              className="pl-3 border-l-2 border-indigo-400 italic text-slate-600 my-1.5"
+            >
+              {trimmed.replace('> ', '')}
+            </blockquote>
+          );
+        }
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          const itemText = trimmed.substring(2);
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-2">
+              <span className="text-indigo-500 font-bold">•</span>
+              <span>{renderInlineFormatting(itemText)}</span>
+            </div>
+          );
+        }
+        if (/^\d+\.\s/.test(trimmed)) {
+          const match = trimmed.match(/^(\d+)\.\s(.*)/);
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-2">
+              <span className="text-indigo-600 font-bold">{match[1]}.</span>
+              <span>{renderInlineFormatting(match[2])}</span>
+            </div>
+          );
+        }
+        return <p key={idx}>{renderInlineFormatting(trimmed)}</p>;
+      })}
+    </div>
+  );
+};
 
 const AIMentor = () => {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
       content:
-        'Hello! I am your AI Financial Mentor. I can help you learn personal finance principles, understand investing basics like SIPs and compound interest, build an emergency fund, or analyze your current spending habits.\n\n*Please remember: All advice is for educational purposes and is not certified professional financial advice.*',
+        '### 👋 Welcome to your AI Financial Mentor!\n\n' +
+        'I am trained to guide you through key personal finance principles, including **Mutual Funds**, **SIPs**, **Compound Interest**, **Emergency Funds**, **Budgeting**, and **Debt Management**.\n\n' +
+        'You can also ask me about your real recorded expenses (e.g. *"Analyze my spending"* or *"Is my food expense high?"*).\n\n' +
+        '*Disclaimer: All guidance is educational and does not constitute formal financial advice.*',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -67,7 +172,7 @@ const AIMentor = () => {
       const errorReply = {
         role: 'assistant',
         content:
-          'I apologize, but I was unable to process your request at this moment. Please check your backend connection or ensure the API service is available.',
+          'I apologize, but I was unable to process your request at this moment. Please check your connection or try again shortly.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isError: true,
       };
@@ -103,14 +208,14 @@ const AIMentor = () => {
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-amber-900 text-xs">
         <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
         <p>
-          <strong>Educational Guidance Only:</strong> Responses are generated by artificial intelligence
-          for educational and informational purposes. This tool does not provide certified financial planning,
+          <strong>Educational Guidance Only:</strong> Responses are generated for educational and
+          informational purposes. This tool does not provide certified financial planning,
           guaranteed investment returns, or legal advice.
         </p>
       </div>
 
       {/* Chat Container */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden flex flex-col h-[560px]">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden flex flex-col h-[580px]">
         {/* Messages List */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {messages.map((msg, index) => (
@@ -139,17 +244,17 @@ const AIMentor = () => {
 
               {/* Message Bubble */}
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-2xs whitespace-pre-wrap ${
+                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-2xs ${
                   msg.role === 'user'
                     ? 'bg-indigo-600 text-white rounded-tr-none'
                     : msg.isError
                     ? 'bg-red-50 text-red-900 border border-red-200 rounded-tl-none'
-                    : 'bg-slate-100 text-slate-800 border border-slate-200/80 rounded-tl-none'
+                    : 'bg-slate-100/90 text-slate-800 border border-slate-200/80 rounded-tl-none'
                 }`}
               >
-                <div className="leading-relaxed">{msg.content}</div>
+                <FormattedMessage content={msg.content} isUser={msg.role === 'user'} />
                 <div
-                  className={`text-[10px] mt-1.5 ${
+                  className={`text-[10px] mt-2 ${
                     msg.role === 'user' ? 'text-indigo-200 text-right' : 'text-slate-400'
                   }`}
                 >
@@ -166,7 +271,7 @@ const AIMentor = () => {
               </div>
               <div className="bg-slate-100 border border-slate-200/80 rounded-2xl rounded-tl-none px-4 py-3 flex items-center gap-2 text-sm text-slate-600">
                 <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-                <span>Mentor is analyzing and preparing response...</span>
+                <span>Mentor is analyzing and preparing your answer...</span>
               </div>
             </div>
           )}
@@ -203,7 +308,7 @@ const AIMentor = () => {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask a question about budgeting, mutual funds, or your spending..."
+              placeholder="Ask a question about mutual funds, SIP, emergency funds, or your spending..."
               disabled={loading}
               className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all disabled:opacity-50"
             />

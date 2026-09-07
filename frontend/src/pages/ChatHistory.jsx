@@ -13,6 +13,87 @@ import {
   CheckCircle,
 } from 'lucide-react';
 
+const renderInlineFormatting = (text) => {
+  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={i} className="font-semibold text-slate-900">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return (
+        <em key={i} className="italic text-slate-600">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code key={i} className="px-1.5 py-0.5 rounded bg-slate-200 text-xs font-mono text-indigo-700">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return part;
+  });
+};
+
+const FormattedMessage = ({ content }) => {
+  if (!content) return null;
+  const lines = content.split('\n');
+
+  return (
+    <div className="space-y-1.5 text-sm leading-relaxed text-slate-800">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={idx} className="h-1" />;
+        if (trimmed.startsWith('### ')) {
+          return (
+            <h3 key={idx} className="text-base font-bold text-slate-900 mt-2 mb-1">
+              {trimmed.replace('### ', '')}
+            </h3>
+          );
+        }
+        if (trimmed.startsWith('#### ')) {
+          return (
+            <h4 key={idx} className="text-xs font-bold uppercase tracking-wider text-indigo-700 mt-2 mb-0.5">
+              {trimmed.replace('#### ', '')}
+            </h4>
+          );
+        }
+        if (trimmed.startsWith('> ')) {
+          return (
+            <blockquote key={idx} className="pl-3 border-l-2 border-indigo-400 italic text-slate-600 my-1.5">
+              {trimmed.replace('> ', '')}
+            </blockquote>
+          );
+        }
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-2">
+              <span className="text-indigo-500 font-bold">•</span>
+              <span>{renderInlineFormatting(trimmed.substring(2))}</span>
+            </div>
+          );
+        }
+        if (/^\d+\.\s/.test(trimmed)) {
+          const match = trimmed.match(/^(\d+)\.\s(.*)/);
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-2">
+              <span className="text-indigo-600 font-bold">{match[1]}.</span>
+              <span>{renderInlineFormatting(match[2])}</span>
+            </div>
+          );
+        }
+        return <p key={idx}>{renderInlineFormatting(trimmed)}</p>;
+      })}
+    </div>
+  );
+};
+
 const ChatHistory = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -146,8 +227,8 @@ const ChatHistory = () => {
                 <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 mt-0.5">
                   <Bot className="w-4 h-4" />
                 </div>
-                <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                  {item.ai_response}
+                <div className="flex-1">
+                  <FormattedMessage content={item.ai_response} />
                 </div>
               </div>
             </div>

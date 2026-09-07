@@ -8,6 +8,7 @@ from app.config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
 from app.models.chat_history import ChatHistory
 from app.models.user import User
 from app.services.analytics_service import get_dashboard_summary, get_category_breakdown
+from app.services.financial_ai_engine import process_financial_query
 
 logger = logging.getLogger(__name__)
 
@@ -48,20 +49,10 @@ def get_financial_context(db: Session, current_user: User) -> str:
         return ""
 
 
-def call_llm(user_message: str, financial_context: str) -> str:
-    """Calls the OpenAI or compatible API using httpx."""
+def call_llm(user_message: str, financial_context: str) -> Optional[str]:
+    """Calls the OpenAI or compatible API if configured."""
     if not OPENAI_API_KEY:
-        # Fallback educational response if API key is not configured in .env
-        return (
-            "*(Note: OPENAI_API_KEY is not configured in backend/.env. Running in offline educational mode.)*\n\n"
-            "Hello! I am your AI Financial Mentor. To enable full dynamic AI responses, please add your "
-            "`OPENAI_API_KEY` to the `.env` file.\n\n"
-            "In the meantime, here is some key financial guidance:\n"
-            "- **Budgeting**: Consider using the 50/30/20 framework (50% Needs, 30% Wants, 20% Savings/Investments).\n"
-            "- **Emergency Fund**: Aim to keep 3 to 6 months of essential living expenses in a liquid savings account or liquid mutual fund.\n"
-            "- **Compound Interest & SIP**: Starting early with Systematic Investment Plans allows compounding to work in your favor over long horizons.\n\n"
-            "*Disclaimer: This information is strictly educational and does not constitute certified financial advice.*"
-        )
+        return None
 
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
@@ -85,24 +76,17 @@ def call_llm(user_message: str, financial_context: str) -> str:
     url = f"{OPENAI_BASE_URL.rstrip('/')}/chat/completions"
 
     try:
-        with httpx.Client(timeout=30.0) as client:
+        with httpx.Client(timeout=20.0) as client:
             resp = client.post(url, json=payload, headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
                 return data["choices"][0]["message"]["content"]
             else:
                 logger.error(f"LLM API returned status {resp.status_code}: {resp.text}")
-                return (
-                    f"I encountered an error contacting the AI service (Status {resp.status_code}). "
-                    "Please verify your API key and connection in `.env`. "
-                    "Remember that financial planning starts with keeping an emergency fund and tracking your daily expenses!"
-                )
+                return None
     except Exception as exc:
         logger.error(f"Error calling LLM: {exc}")
-        return (
-            "I could not connect to the AI service at this moment. "
-            f"Error details: {str(exc)}. Please check your internet connection and API key in backend/.env."
-        )
+        return None
 
 
 def chat_with_mentor(
@@ -111,7 +95,13 @@ def chat_with_mentor(
     current_user: User
 ) -> ChatHistory:
     financial_context = get_financial_context(db, current_user)
+    
+    # 1. Try LLM API first if key is configured
     ai_reply = call_llm(message, financial_context)
+
+    # 2. If no API key or API call failed, use the intelligent Financial Knowledge & Query Engine
+    if not ai_reply:
+        ai_reply = process_financial_query(message, db, current_user)
 
     # Persist interaction to database
     history_entry = ChatHistory(
