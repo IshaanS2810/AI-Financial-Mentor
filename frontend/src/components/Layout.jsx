@@ -13,6 +13,8 @@ import {
   Menu,
   X,
   Sparkles,
+  Compass,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 const Layout = () => {
@@ -29,7 +31,9 @@ const Layout = () => {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Income', path: '/income', icon: Wallet },
     { name: 'Expenses', path: '/expenses', icon: Receipt },
+    { name: 'Recommendations', path: '/recommendations', icon: Compass, badge: 'New' },
     { name: 'AI Mentor', path: '/mentor', icon: Bot, badge: 'AI' },
+    { name: 'Profile', path: '/profile', icon: SlidersHorizontal },
     { name: 'Learning Center', path: '/learning', icon: BookOpen },
     { name: 'Chat History', path: '/history', icon: History },
   ];

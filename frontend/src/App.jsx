@@ -13,6 +13,9 @@ import AIMentor from './pages/AIMentor';
 import LearningCenter from './pages/LearningCenter';
 import ChatHistory from './pages/ChatHistory';
 
+import Recommendations from './pages/Recommendations';
+import FinancialProfile from './pages/FinancialProfile';
+
 function App() {
   return (
     <AuthProvider>
@@ -29,6 +32,8 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/income" element={<Income />} />
               <Route path="/expenses" element={<Expenses />} />
+              <Route path="/recommendations" element={<Recommendations />} />
+              <Route path="/profile" element={<FinancialProfile />} />
               <Route path="/mentor" element={<AIMentor />} />
               <Route path="/learning" element={<LearningCenter />} />
               <Route path="/history" element={<ChatHistory />} />

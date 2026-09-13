@@ -7,41 +7,59 @@ from sqlalchemy.orm import Session
 from app.config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
 from app.models.chat_history import ChatHistory
 from app.models.user import User
-from app.services.analytics_service import get_dashboard_summary, get_category_breakdown
+from app.services.financial_profile_service import get_financial_profile
+from app.services.financial_analysis_service import calculate_user_financial_analysis
+from app.services.recommendation_service import generate_personalized_recommendations
 from app.services.financial_ai_engine import process_financial_query
 
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are "AI Financial Mentor", an empathetic, knowledgeable, and responsible educational financial guide.
-Your purpose is to help users learn about personal finance, budgeting, saving, investing principles, and smart money management.
+Your purpose is to provide general financial education and personalized educational guidance based on the user's financial information.
 
-IMPORTANT RULES & BOUNDARIES:
-1. You are an educational mentor, NOT a licensed financial advisor or certified financial planner.
-2. Provide general educational guidance. Do not offer formal, regulated financial or legal advice.
-3. Never promise or guarantee specific investment returns (e.g., never say "you will make 15% guaranteed"). Emphasize that all investments carry risk and returns fluctuate.
-4. Promote responsible financial habits: building an emergency fund (3-6 months of expenses), tracking spending, following budgeting rules (such as 50/30/20), systematic investment plans (SIP), and debt reduction.
-5. If the user asks about their spending or saving, use their aggregated summary provided below to give constructive, actionable observations.
-6. Keep answers structured, friendly, concise, and easy for a student or beginner to understand. Use formatting like bullet points when helpful.
-7. Always clarify assumptions and encourage consulting qualified professionals for binding financial decisions.
+CRITICAL GUIDELINES & BOUNDARIES:
+1. You are an educational mentor, NOT a licensed financial advisor or certified broker. Always make clear that responses are educational suggestions and not formal investment or legal advice.
+2. When answering personalized questions ("Can I afford to invest?", "How much should I invest?", "Why was SIP recommended?"), use the user's provided financial summary and risk profile.
+3. Never guarantee returns or claim an investment is risk-free.
+4. Never instruct the user to buy a specific individual stock.
+5. Emphasize sound personal finance concepts: emergency funds, savings, SIPs, diversified index mutual funds, risk management, and long-term asset allocation.
+6. Clearly explain WHY a recommendation is appropriate for their specific financial situation.
+7. Distinguish between:
+   - Facts calculated from user data (income, expenses, savings rate)
+   - Educational suggestions (exploring SIPs, trimming discretionary spending)
+   - Assumptions/estimates (emergency fund coverage months based on recorded expenses)
+8. If the user's financial profile or expense data is missing, gently state what is missing rather than fabricating numbers.
+9. Encourage users to consult qualified professionals before making binding financial commitments.
 """
 
 
 def get_financial_context(db: Session, current_user: User) -> str:
-    """Generates an aggregated, safe financial snapshot without exposing PII."""
+    """Generates an aggregated, safe financial snapshot including profile and recommendations."""
     try:
-        summary = get_dashboard_summary(db, current_user)
-        breakdown = get_category_breakdown(db, current_user)
+        analysis = calculate_user_financial_analysis(db, current_user)
+        profile = get_financial_profile(db, current_user)
+        recs_data = generate_personalized_recommendations(db, current_user)
 
         top_cats = ", ".join(
-            [f"{item['category']}: ₹{item['amount']:,.2f} ({item['percentage']}%)" for item in breakdown[:4]]
+            [f"{item['category']}: ₹{item['amount']:,.2f} ({item['percentage']}%)" for item in analysis["top_categories"]]
         ) or "None recorded"
 
+        rec_titles = "; ".join([f"[{r.priority}] {r.title}" for r in recs_data.recommendations[:4]])
+
         context = (
-            f"\n[User Financial Snapshot (Aggregated for Context)]\n"
-            f"- Total Recorded Income: ₹{summary['total_income']:,.2f}\n"
-            f"- Total Recorded Expenses: ₹{summary['total_expenses']:,.2f}\n"
-            f"- Net Savings: ₹{summary['savings']:,.2f}\n"
-            f"- Top Expense Categories: {top_cats}\n"
+            f"\n[User Financial Profile & Calculated Summary]\n"
+            f"- Average Monthly Income: ₹{analysis['monthly_income']:,.2f}\n"
+            f"- Average Monthly Expenses: ₹{analysis['monthly_expenses']:,.2f}\n"
+            f"- Monthly Savings/Surplus: ₹{analysis['monthly_savings']:,.2f}\n"
+            f"- Savings Rate: {analysis['savings_rate']}%\n"
+            f"- Investment Readiness Status: {analysis['investment_readiness']}\n"
+            f"- Estimated Monthly Investment Capacity: ₹{analysis['investment_capacity']:,.2f}\n"
+            f"- Recorded Emergency Fund: ₹{analysis['emergency_fund']:,.2f} (~{analysis['estimated_emergency_months']} months coverage)\n"
+            f"- Risk Tolerance: {profile.risk_tolerance if profile else 'Not configured'}\n"
+            f"- Investment Horizon: {profile.investment_horizon if profile else 'Not configured'}\n"
+            f"- Financial Goal: {profile.financial_goal if profile else 'Not configured'}\n"
+            f"- Top Expense Outflows: {top_cats}\n"
+            f"- Active System Recommendations: {rec_titles}\n"
         )
         return context
     except Exception as e:
@@ -70,7 +88,7 @@ def call_llm(user_message: str, financial_context: str) -> Optional[str]:
             {"role": "user", "content": user_message},
         ],
         "temperature": 0.7,
-        "max_tokens": 800,
+        "max_tokens": 900,
     }
 
     url = f"{OPENAI_BASE_URL.rstrip('/')}/chat/completions"

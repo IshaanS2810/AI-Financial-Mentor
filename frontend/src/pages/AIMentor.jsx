@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import api from '../api/client';
 import {
   Bot,
@@ -12,11 +12,13 @@ import {
 } from 'lucide-react';
 
 const SUGGESTED_PROMPTS = [
-  'What are mutual funds and how do they work?',
-  'What is a Systematic Investment Plan (SIP)?',
+  'Can I afford to invest right now?',
+  'How much can I allocate to a monthly SIP?',
+  'Why were these recommendations chosen for me?',
   'How should I build an emergency fund?',
-  'Explain compound interest and the rule of 72.',
+  'What are mutual funds and how do they work?',
   'Analyze my current spending and budget.',
+  'Explain compound interest and the rule of 72.',
 ];
 
 const renderInlineFormatting = (text, isUser = false) => {
@@ -123,13 +125,16 @@ const FormattedMessage = ({ content, isUser }) => {
 };
 
 const AIMentor = () => {
+  const location = useLocation();
+  const prefillHandled = useRef(false);
+
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
       content:
         '### 👋 Welcome to your AI Financial Mentor!\n\n' +
-        'I am trained to guide you through key personal finance principles, including **Mutual Funds**, **SIPs**, **Compound Interest**, **Emergency Funds**, **Budgeting**, and **Debt Management**.\n\n' +
-        'You can also ask me about your real recorded expenses (e.g. *"Analyze my spending"* or *"Is my food expense high?"*).\n\n' +
+        'I am trained to guide you through key personal finance principles, including **Personalized Investment Recommendations**, **Mutual Funds & SIPs**, **Compound Interest**, **Emergency Funds**, **Budgeting**, and **Debt Management**.\n\n' +
+        'You can ask me questions about your real cashflow and profile (e.g. *"Can I afford to invest?"*, *"Why was SIP recommended for me?"*, or *"Analyze my spending"*).\n\n' +
         '*Disclaimer: All guidance is educational and does not constitute formal financial advice.*',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
@@ -181,6 +186,13 @@ const AIMentor = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (location.state?.prefilledQuery && !prefillHandled.current) {
+      prefillHandled.current = true;
+      handleSend(location.state.prefilledQuery);
+    }
+  }, [location.state]);
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">

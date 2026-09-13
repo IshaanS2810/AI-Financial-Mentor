@@ -10,6 +10,8 @@ from app.routers import (
     expense,
     dashboard,
     chatbot,
+    profile,
+    recommendations,
 )
 
 # Create all database tables (safely creates missing tables without dropping existing ones)
@@ -41,6 +43,8 @@ app.include_router(income.router)
 app.include_router(expense.router)
 app.include_router(dashboard.router)
 app.include_router(chatbot.router)
+app.include_router(profile.router)
+app.include_router(recommendations.router)
 
 
 @app.get("/")

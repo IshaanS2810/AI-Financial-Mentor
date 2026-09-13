@@ -63,7 +63,17 @@ The platform empowers users to manage their cashflow (income & expenses), track 
      7. Credit Score & Responsible Debt
    - **Interactive SIP & Compounding Calculator**: Live slider/input tool computing total invested, estimated wealth gain, and future maturity corpus.
 
-7. **AI Chat History**
+7. **Financial Profile & Investor Risk Questionnaire**
+   - Structured user profile capturing Age, Risk Tolerance (Conservative, Moderate, Aggressive), Investment Horizon (<3 yrs, 3-5 yrs, 5-10 yrs, >10 yrs), Primary Financial Goal, Current Emergency Savings (₹), and Downside Volatility Reaction.
+   - User-scoped persistence with real-time editing and validation.
+
+8. **Personalized Investment Recommendations Engine (Rule-Based)**
+   - Deterministic calculations: Average monthly income, expenses, net savings, savings rate, emergency fund runway months, and conservative investment capacity.
+   - **Investment Readiness Heuristic**: Assigns categorical status (`NOT_READY`, `BUILD_EMERGENCY_FUND`, `READY_TO_EXPLORE`, `STRONG_INVESTMENT_CAPACITY`).
+   - **Prioritized Recommendations**: Color-coded action items (HIGH / MEDIUM / LOW) across emergency fund buffers, discretionary spending trims, and horizon/risk-matched instruments (liquid debt, hybrid funds, diversified equity index fund SIPs).
+   - Direct integration with AI Mentor via pre-filled contextual query chips.
+
+9. **AI Chat History**
    - Automatically stores all interactions in reverse-chronological order.
    - User-isolated query and deletion capabilities.
 
@@ -118,25 +128,34 @@ AI-Financial-Mentor/
 │   │   │   ├── user.py
 │   │   │   ├── income.py
 │   │   │   ├── expense.py
-│   │   │   └── chat_history.py
+│   │   │   ├── chat_history.py
+│   │   │   └── financial_profile.py
 │   │   ├── schemas/           # Pydantic request/response schemas
 │   │   │   ├── user.py
 │   │   │   ├── income.py
 │   │   │   ├── expense.py
 │   │   │   ├── dashboard.py
-│   │   │   └── chat.py
+│   │   │   ├── chat.py
+│   │   │   ├── financial_profile.py
+│   │   │   └── recommendation.py
 │   │   ├── services/          # Business logic and user isolation
 │   │   │   ├── auth_service.py
 │   │   │   ├── income_service.py
 │   │   │   ├── expense_service.py
 │   │   │   ├── analytics_service.py
+│   │   │   ├── financial_profile_service.py
+│   │   │   ├── financial_analysis_service.py
+│   │   │   ├── recommendation_service.py
+│   │   │   ├── financial_ai_engine.py
 │   │   │   └── ai_service.py
 │   │   ├── routers/           # FastAPI API route controllers
 │   │   │   ├── auth.py
 │   │   │   ├── income.py
 │   │   │   ├── expense.py
 │   │   │   ├── dashboard.py
-│   │   │   └── chatbot.py
+│   │   │   ├── chatbot.py
+│   │   │   ├── profile.py
+│   │   │   └── recommendations.py
 │   │   ├── utils/             # Helpers, constants, and JWT security
 │   │   │   ├── constants.py
 │   │   │   ├── helpers.py
@@ -151,7 +170,8 @@ AI-Financial-Mentor/
 │   │   ├── test_expense.py
 │   │   ├── test_dashboard.py
 │   │   ├── test_ai.py
-│   │   └── test_isolation.py  # User A vs User B data boundary verification
+│   │   ├── test_isolation.py  # User A vs User B data boundary verification
+│   │   └── test_profile_and_recommendations.py # Profile & recommendations verification
 │   │
 │   ├── .env                   # Environment variables (excluded from git)
 │   ├── requirements.txt       # Backend dependencies
@@ -172,6 +192,8 @@ AI-Financial-Mentor/
 │   │   │   ├── Dashboard.jsx  # KPI summary cards & Recharts graphs
 │   │   │   ├── Income.jsx     # Income records table & CRUD modal
 │   │   │   ├── Expenses.jsx   # Expense records table & CRUD modal
+│   │   │   ├── FinancialProfile.jsx # Investor questionnaire & risk assessment
+│   │   │   ├── Recommendations.jsx # Prioritized investment recommendations & KPI bar
 │   │   │   ├── AIMentor.jsx   # Interactive AI chat interface
 │   │   │   ├── LearningCenter.jsx # 7 educational modules & SIP calculator
 │   │   │   └── ChatHistory.jsx# Past conversation timeline
@@ -308,6 +330,9 @@ All routes except `/auth/register`, `/auth/login`, and `/` require an `Authoriza
 | `GET` | `/dashboard/summary` | Summary: total income, total expense, savings | Yes |
 | `GET` | `/dashboard/category-breakdown` | Expense totals and percentages by category | Yes |
 | `GET` | `/dashboard/monthly-trend` | Monthly income, expense, and savings trends | Yes |
+| `GET` | `/profile` | Retrieve user's financial & risk profile | Yes |
+| `POST` | `/profile` | Create or update user's financial profile | Yes |
+| `GET` | `/recommendations` | Get rule-based personalized investment recommendations | Yes |
 | `POST` | `/ai/chat` | Send question to AI mentor & save to history | Yes |
 | `GET` | `/ai/history` | Retrieve user's previous AI conversations | Yes |
 | `DELETE` | `/ai/history/{chat_id}` | Delete an AI conversation entry | Yes |
@@ -330,6 +355,11 @@ pytest tests -v
 - **`test_income.py`**: Full CRUD operations for income and unauthorized request rejection.
 - **`test_expense.py`**: Expense CRUD operations, validation rules (`amount > 0`), and unauthorized rejection.
 - **`test_dashboard.py`**: Verifies exact mathematical computation of total income, total expenses, savings, and category distribution percentages.
+- **`test_profile_and_recommendations.py`**:
+  - Financial Profile creation, update, and validation (rejecting negative emergency funds, validating risk levels).
+  - Rule-based investment readiness states (`NOT_READY`, `BUILD_EMERGENCY_FUND`, `READY_TO_EXPLORE`, `STRONG_INVESTMENT_CAPACITY`).
+  - Prioritized recommendations matching investment horizons (<3 years debt, 3-5 years hybrid, >5 years index SIP).
+  - Strict user boundary isolation: User B cannot access or modify User A's profile or recommendations.
 - **`test_ai.py`**: Tests AI chat generation, automatic `ChatHistory` persistence, retrieval, and entry deletion.
 - **`test_isolation.py`**: **Mandatory Multi-User Boundary Test**. Simulates User A and User B concurrently:
   - Verifies User B cannot retrieve, update, or delete User A's income (`404 Not Found`).

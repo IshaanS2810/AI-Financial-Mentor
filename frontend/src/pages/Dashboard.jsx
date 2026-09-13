@@ -15,6 +15,11 @@ import {
   PieChart as PieChartIcon,
   BarChart3,
   Percent,
+  Compass,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -49,21 +54,24 @@ const Dashboard = () => {
   });
   const [categoryData, setCategoryData] = useState([]);
   const [monthlyTrend, setMonthlyTrend] = useState([]);
+  const [recommendationsData, setRecommendationsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [sumRes, catRes, trendRes] = await Promise.all([
+      const [sumRes, catRes, trendRes, recRes] = await Promise.allSettled([
         api.get('/dashboard/summary'),
         api.get('/dashboard/category-breakdown'),
         api.get('/dashboard/monthly-trend'),
+        api.get('/recommendations'),
       ]);
 
-      setSummary(sumRes.data);
-      setCategoryData(catRes.data);
-      setMonthlyTrend(trendRes.data);
+      if (sumRes.status === 'fulfilled') setSummary(sumRes.value.data);
+      if (catRes.status === 'fulfilled') setCategoryData(catRes.value.data);
+      if (trendRes.status === 'fulfilled') setMonthlyTrend(trendRes.value.data);
+      if (recRes.status === 'fulfilled') setRecommendationsData(recRes.value.data);
       setError('');
     } catch (err) {
       setError('Failed to load dashboard data. Please try again.');
@@ -214,6 +222,101 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Personalized AI Recommendations & Investment Readiness Widget */}
+      {recommendationsData && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs relative overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
+                <Compass className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900">Personalized Financial Guidance</h2>
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+                    AI Mentor
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Tailored insights based on your cashflow balance and risk profile
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Readiness Badge */}
+              {recommendationsData.investment_readiness === 'STRONG_INVESTMENT_CAPACITY' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Strong Capacity
+                </span>
+              )}
+              {recommendationsData.investment_readiness === 'READY_TO_EXPLORE' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Ready to Explore
+                </span>
+              )}
+              {recommendationsData.investment_readiness === 'BUILD_EMERGENCY_FUND' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Build Emergency Buffer
+                </span>
+              )}
+              {recommendationsData.investment_readiness === 'NOT_READY' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                  Deficit / Focus on Cashflow
+                </span>
+              )}
+
+              <Link
+                to="/recommendations"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
+              >
+                <span>View Full Plan</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100">
+              <span className="text-xs text-slate-500 font-medium">Monthly Investment Capacity</span>
+              <div className="text-lg font-bold text-slate-900 mt-0.5">
+                ₹{(recommendationsData.financial_summary?.investment_capacity || 0).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                <span className="text-xs font-normal text-slate-500 ml-1">/ month</span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Conservative surplus after safety buffer</p>
+            </div>
+
+            <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100">
+              <span className="text-xs text-slate-500 font-medium">Emergency Fund Runway</span>
+              <div className="text-lg font-bold text-slate-900 mt-0.5">
+                {(recommendationsData.profile?.emergency_fund_months || 0).toFixed(1)}
+                <span className="text-xs font-normal text-slate-500 ml-1">months</span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                {(recommendationsData.profile?.emergency_fund_months || 0) >= 3 ? 'Meets recommended 3+ months target' : 'Recommended target: 3-6 months'}
+              </p>
+            </div>
+
+            <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 flex flex-col justify-between">
+              <div>
+                <span className="text-xs text-slate-500 font-medium">Top Priority Focus</span>
+                <p className="text-sm font-semibold text-slate-800 mt-0.5 line-clamp-1">
+                  {recommendationsData.recommendations?.[0]?.title || 'Keep logging transactions'}
+                </p>
+              </div>
+              <div className="mt-2">
+                <Link
+                  to="/recommendations"
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1"
+                >
+                  Explore actions &rarr;
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Visualizations Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

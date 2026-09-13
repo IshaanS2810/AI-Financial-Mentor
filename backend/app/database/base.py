@@ -6,5 +6,7 @@ from app.models.user import User
 from app.models.income import Income
 from app.models.expense import Expense
 from app.models.chat_history import ChatHistory
+from app.models.financial_profile import FinancialProfile
 
-__all__ = ["User", "Income", "Expense", "ChatHistory"]
+__all__ = ["User", "Income", "Expense", "ChatHistory", "FinancialProfile"]
+

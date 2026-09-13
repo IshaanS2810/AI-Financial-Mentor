@@ -3,6 +3,10 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
+from app.models.income import Income
+from app.models.expense import Expense
+from app.models.chat_history import ChatHistory
+from app.models.financial_profile import FinancialProfile
 
 
 class User(Base):
@@ -27,5 +31,11 @@ class User(Base):
     chat_history = relationship(
         "ChatHistory",
         back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    financial_profile = relationship(
+        "FinancialProfile",
+        back_populates="user",
+        uselist=False,
         cascade="all, delete-orphan"
     )
