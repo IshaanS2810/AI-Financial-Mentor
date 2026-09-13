@@ -246,22 +246,22 @@ const Dashboard = () => {
 
             <div className="flex items-center gap-3">
               {/* Readiness Badge */}
-              {recommendationsData.investment_readiness === 'STRONG_INVESTMENT_CAPACITY' && (
+              {recommendationsData.financial_summary?.investment_readiness === 'STRONG_INVESTMENT_CAPACITY' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Strong Capacity
                 </span>
               )}
-              {recommendationsData.investment_readiness === 'READY_TO_EXPLORE' && (
+              {recommendationsData.financial_summary?.investment_readiness === 'READY_TO_EXPLORE' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Ready to Explore
                 </span>
               )}
-              {recommendationsData.investment_readiness === 'BUILD_EMERGENCY_FUND' && (
+              {recommendationsData.financial_summary?.investment_readiness === 'BUILD_EMERGENCY_FUND' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                   <ShieldCheck className="w-3.5 h-3.5" /> Build Emergency Buffer
                 </span>
               )}
-              {recommendationsData.investment_readiness === 'NOT_READY' && (
+              {recommendationsData.financial_summary?.investment_readiness === 'NOT_READY' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
                   Deficit / Focus on Cashflow
                 </span>
@@ -290,11 +290,11 @@ const Dashboard = () => {
             <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100">
               <span className="text-xs text-slate-500 font-medium">Emergency Fund Runway</span>
               <div className="text-lg font-bold text-slate-900 mt-0.5">
-                {(recommendationsData.profile?.emergency_fund_months || 0).toFixed(1)}
+                {(recommendationsData.financial_summary?.estimated_emergency_months || 0).toFixed(1)}
                 <span className="text-xs font-normal text-slate-500 ml-1">months</span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1">
-                {(recommendationsData.profile?.emergency_fund_months || 0) >= 3 ? 'Meets recommended 3+ months target' : 'Recommended target: 3-6 months'}
+                {(recommendationsData.financial_summary?.estimated_emergency_months || 0) >= 3 ? 'Meets recommended 3+ months target' : 'Recommended target: 3-6 months'}
               </p>
             </div>
 

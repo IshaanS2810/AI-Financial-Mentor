@@ -57,8 +57,11 @@ def generate_personalized_recommendations(
                     "you from having to liquidate investments during market downturns to cover unexpected expenses."
                 ),
                 suggested_action=(
-                    f"Direct the majority of your monthly surplus (aim for at least ₹{max(monthly_savings * 0.7, 1000):,.0f}/month) "
+                    f"Direct the majority of your monthly surplus (aim for at least ₹{max(monthly_savings * 0.7, 500):,.0f}/month) "
                     f"into a high-yield savings account or liquid mutual fund until you reach ₹{target_buffer:,.0f}."
+                    if monthly_savings > 0 else
+                    f"First eliminate your monthly deficit and stabilize cashflow, then prioritize directing surplus "
+                    f"into an emergency buffer until you reach at least ₹{target_buffer:,.0f}."
                 )
             )
         )
@@ -201,7 +204,9 @@ def generate_personalized_recommendations(
                         "delivered inflation-beating compound returns while smoothing short-term market volatility."
                     ),
                     suggested_action=(
-                        f"Consider starting an automated monthly SIP between ₹{min(capacity, 2000):,.0f} and "
+                        f"Consider starting an automated monthly micro-SIP of ~₹{capacity:,.0f} in a low-cost, diversified index mutual fund."
+                        if capacity <= 1000 else
+                        f"Consider starting an automated monthly SIP between ₹{round(capacity * 0.5):,.0f} and "
                         f"₹{capacity:,.0f} in a low-cost, diversified index mutual fund."
                     )
                 )

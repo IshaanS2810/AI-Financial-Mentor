@@ -176,15 +176,24 @@ def generate_personal_analysis(intent: str, db: Session, current_user: User, raw
                 "Because your monthly surplus is ₹0 or negative, you should not allocate funds to investing right now. "
                 "Focus on creating a positive monthly surplus first."
             )
+        why_not_all = (
+            f"Because your emergency buffer is below 3 months, 75% of your surplus is prioritized for emergency savings, leaving 25% (₹{capacity:,.0f}) for starter investments."
+            if emergency_months < 3 else
+            "Even with an adequate safety net, keeping 20-40% of surplus liquid ensures ongoing flexibility for irregular expenses and peace of mind."
+        )
+        next_step = (
+            f"Consider an automated monthly micro-SIP of ~₹{capacity:,.0f} on payday."
+            if capacity <= 1000 else
+            f"Consider an automated monthly SIP between ₹{round(capacity * 0.5):,.0f} and ₹{capacity:,.0f} on payday."
+        )
         return (
             f"### 💰 Recommended Monthly Investment Allocation\n\n"
             f"- **Calculated Monthly Surplus**: ₹{monthly_savings:,.0f} (Income: ₹{monthly_inc:,.0f} - Expenses: ₹{monthly_exp:,.0f})\n"
             f"- **Emergency Fund Status**: ~{emergency_months} months coverage\n"
             f"- **Suggested Investment Allocation**: **₹{capacity:,.0f} per month**\n\n"
             f"#### Why not invest all ₹{monthly_savings:,.0f}?\n"
-            f"We use a conservative educational heuristic: "
-            f"{'Because your emergency buffer is below 3 months, 75% of your surplus is prioritized for emergency savings, leaving 25% (₹' + f'{capacity:,.0f}) for starter investments.' if emergency_months < 3 else 'Even with an adequate safety net, keeping 20-40% of surplus liquid ensures ongoing flexibility for irregular expenses and peace of mind.'}\n\n"
-            f"**Suggested Next Step:** Consider an automated monthly SIP between ₹{min(capacity, 1000):,.0f} and ₹{capacity:,.0f} on payday."
+            f"We use a conservative educational heuristic: {why_not_all}\n\n"
+            f"**Suggested Next Step:** {next_step}"
             + profile_missing_note
         )
 

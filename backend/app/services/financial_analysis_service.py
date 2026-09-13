@@ -55,8 +55,8 @@ def calculate_user_financial_analysis(
     avg_monthly_expenses = round(total_expenses / num_months, 2)
     monthly_savings = round(avg_monthly_income - avg_monthly_expenses, 2)
 
-    # Savings Rate calculation (handled safely for zero income)
-    if avg_monthly_income > 0:
+    # Savings Rate calculation (handled safely for zero income or negative cashflow)
+    if avg_monthly_income > 0 and monthly_savings > 0:
         savings_rate = round((monthly_savings / avg_monthly_income) * 100, 2)
     else:
         savings_rate = 0.0

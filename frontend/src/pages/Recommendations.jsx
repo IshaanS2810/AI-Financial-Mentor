@@ -193,7 +193,9 @@ const Recommendations = () => {
                 financial_summary.monthly_savings >= 0 ? 'text-indigo-600' : 'text-amber-600'
               }`}
             >
-              ₹{financial_summary.monthly_savings.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+              {financial_summary.monthly_savings < 0
+                ? `-₹${Math.abs(financial_summary.monthly_savings).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+                : `₹${financial_summary.monthly_savings.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`}
             </div>
             <div className="text-[10px] text-slate-500 font-semibold mt-0.5 flex items-center gap-0.5">
               <PiggyBank className="w-3 h-3" /> Income - Expenses
