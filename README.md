@@ -65,7 +65,7 @@ The platform empowers users to manage their cashflow (income & expenses), track 
 
 7. **Financial Profile & Investor Risk Questionnaire**
    - Structured user profile capturing Age, Risk Tolerance (Conservative, Moderate, Aggressive), Investment Horizon (<3 yrs, 3-5 yrs, 5-10 yrs, >10 yrs), Primary Financial Goal, Current Emergency Savings (₹), and Downside Volatility Reaction.
-   - User-scoped persistence with real-time editing and validation.
+   - User-scoped persistence with real-time editing and validation..
 
 8. **Personalized Investment Recommendations Engine (Rule-Based)**
    - Deterministic calculations: Average monthly income, expenses, net savings, savings rate, emergency fund runway months, and conservative investment capacity.
